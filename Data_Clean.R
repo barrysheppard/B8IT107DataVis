@@ -16,7 +16,9 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # pacman::p_load("caTools")
 
 # Start by loading the data
-df <- read.csv("data/survey_results_public_01.csv")
+df1 <- read.csv("data/survey_results_public_01.csv")
+df2 <- read.csv("data/survey_results_public_02.csv")
+df <- rbind(df1, df2)
 
 # df$DevType is a text string seperated by semicolons. Each value is a 
 # developer type. The total number of dev types is 25 with a 25 Other option
@@ -61,8 +63,21 @@ for (language in languages) {
   df[matches, as.character(new_column)] <- TRUE
 }
 
+# remove all put the unique id respondent and the new variables
+names(df)
+columns_kept <- c("Respondent", "data_analyst", "data_scientist", "language_Assembly",
+       "language_Bash/Shell/PowerShell", "language_C", "language_C++",
+       "language_Clojure", "language_Dart", "language_Elixir", 
+       "language_Erlang", "language_F#", "language_Go", "language_HTML/CSS",
+       "language_Java",  "language_JavaScript", "language_Kotlin",
+       "language_Objective-C", "language_PHP",  "language_Python",
+       "language_R",  "language_Ruby", "language_Rust",  "language_Scala",
+       "language_SQL", "language_Swift", "language_TypeScript", "language_VBA",
+       "language_WebAssembly")
+output_df <- df[,columns_kept]
 
+names(output_df)
 # Save the file
-write.csv(df,'data/survey_results_updated_01.csv')
+write.csv(output_df,'data/survey_calculated_columns.csv')
 
 # Repeat for the 02 file by changing the read and write variable names
