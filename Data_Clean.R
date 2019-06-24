@@ -12,8 +12,8 @@ rm(list = ls())
 # This sets the working directory to the same as the file
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # This installs all the packages needed if not already loaded
-# if (!require("pacman")) install.packages("pacman")
-# pacman::p_load("caTools")
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load("countrycode")
 
 # Start by loading the data
 df1 <- read.csv("data/survey_results_public_01.csv")
@@ -40,6 +40,11 @@ df$data_scientist <- FALSE
 matches <- grep('Data scientist or machine learning specialist', df$DevType)
 df$data_scientist[matches] <- TRUE
 
+# We also want a simple variable showing the split across all 3 possible
+df$data_role[df$data_analyst & df$data_scientist] <- 'Both'
+df$data_role[!df$data_analyst & df$data_scientist] <- 'Data Scientist'
+df$data_role[df$data_analyst & !df$data_scientist] <- 'Data Analyst'
+df$data_role[!df$data_analyst & !df$data_scientist] <- 'None'
 
 # Next we want to do similar with languages worked.
 # The variable in question is df$LanguageWorkedWith
@@ -63,21 +68,27 @@ for (language in languages) {
   df[matches, as.character(new_column)] <- TRUE
 }
 
+# For presenting the data, I wanted to be able to show regional areas.
+# To do this, I need to map all the countries onto regions.
+# Luckily there is a countrycode package that makes this nice and easy
+
+df$continent <- countrycode(df$Country, 'country.name', 'continent')
+df$region <- countrycode(df$Country, 'country.name', 'region')
+# There are some with NA as the Country was not listed
+
 # remove all put the unique id respondent and the new variables
-names(df)
-columns_kept <- c("Respondent", "data_analyst", "data_scientist", "language_Assembly",
-       "language_Bash/Shell/PowerShell", "language_C", "language_C++",
-       "language_Clojure", "language_Dart", "language_Elixir", 
-       "language_Erlang", "language_F#", "language_Go", "language_HTML/CSS",
-       "language_Java",  "language_JavaScript", "language_Kotlin",
-       "language_Objective-C", "language_PHP",  "language_Python",
-       "language_R",  "language_Ruby", "language_Rust",  "language_Scala",
-       "language_SQL", "language_Swift", "language_TypeScript", "language_VBA",
-       "language_WebAssembly")
+columns_kept <- c("Respondent", "data_analyst", "data_scientist", "data_role",
+                  "language_Assembly",
+                  "language_Bash/Shell/PowerShell", "language_C", "language_C++",
+                  "language_Clojure", "language_Dart", "language_Elixir", 
+                  "language_Erlang", "language_F#", "language_Go", "language_HTML/CSS",
+                  "language_Java",  "language_JavaScript", "language_Kotlin",
+                  "language_Objective-C", "language_PHP",  "language_Python",
+                  "language_R",  "language_Ruby", "language_Rust",  "language_Scala",
+                  "language_SQL", "language_Swift", "language_TypeScript", "language_VBA",
+                  "language_WebAssembly", "region", "continent")
 output_df <- df[,columns_kept]
 
-names(output_df)
 # Save the file
 write.csv(output_df,'data/survey_calculated_columns.csv')
 
-# Repeat for the 02 file by changing the read and write variable names
