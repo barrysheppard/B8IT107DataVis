@@ -63,10 +63,43 @@ for (language in languages) {
   # As some of the items are single characters which would have lots of 
   # false positives we're enclosing the variables with semi-colons
   match <- paste(";",language,";", sep = "")
+  # One problem with this is the start and last entry don't have ;
+  # so in this case we're adding them
   # The fixed = TRUE stops the C++ being treated as a special operator
-  matches <- grep(match, df$LanguageWorkedWith, fixed = TRUE)
+  matches <- grep(match, paste(";",df$LanguageWorkedWith,";", sep = ""), fixed = TRUE)
   df[matches, as.character(new_column)] <- TRUE
 }
+
+# Similar again situation for interview questions
+# The variable in question is df$LastInt
+# The full list is
+interview_questions <- c("Write any code",
+                         "Write code by hand (e.g., on a whiteboard)",
+                         "Complete a take-home project",
+                         "Solve a brain-teaser style puzzle",
+                         "Interview with people in peer roles",
+                         "Interview with people in senior / management roles")
+
+# Loop through the list of langauges searching and adding new column
+# As details are multi-word this time we need to add a different suffix
+# So we're going to go with numbers and alias it later in tableau
+question_number <- 1
+for (question in interview_questions) {
+  # Starting by adding new column defaulting to false
+  new_column <- paste("question_",question_number, sep = "")
+  df[, as.character(new_column)] <- FALSE
+  # Find the matches and mark them as TRUE instead
+  # As some of the items are single characters which would have lots of 
+  # false positives we're enclosing the variables with semi-colons
+  match <- paste(";",question,";", sep = "")
+  # One problem with this is the start and last entry don't have ;
+  # so in this case we're adding them
+  # The fixed = TRUE stops the C++ being treated as a special operator
+  matches <- grep(match, paste(";",df$LastInt,";", sep = ""), fixed = TRUE)
+  df[matches, as.character(new_column)] <- TRUE
+  question_number <- question_number + 1
+}
+
 
 # For presenting the data, I wanted to be able to show regional areas.
 # To do this, I need to map all the countries onto regions.
@@ -86,7 +119,9 @@ columns_kept <- c("Respondent", "data_analyst", "data_scientist", "data_role",
                   "language_Objective-C", "language_PHP",  "language_Python",
                   "language_R",  "language_Ruby", "language_Rust",  "language_Scala",
                   "language_SQL", "language_Swift", "language_TypeScript", "language_VBA",
-                  "language_WebAssembly", "region", "continent")
+                  "language_WebAssembly", "region", "continent", "question_1",
+                  "question_2", "question_3", "question_4", "question_5",
+                  "question_6")
 output_df <- df[,columns_kept]
 
 # Save the file
